@@ -24,5 +24,5 @@ app.use(`${baseRoute}/tasks`, taskRouter);
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-const port = parseInt(process.env.SERVER_PORT);
+const port = parseInt(process.env.SERVER_PORT) || 5000;
 app.listen(port, console.log(`server running on port ${port}!`));
