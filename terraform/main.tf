@@ -81,7 +81,7 @@ resource "aws_security_group" "todo-app" {
     ]
 }
 
-resource "aws_key_pair" "deployer" {
+resource "aws_key_pair" "todo-terraform" {
     key_name = var.key_name
     public_key = var.public_key
 }
