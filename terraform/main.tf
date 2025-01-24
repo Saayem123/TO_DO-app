@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "todo-app" {
-    ami = "023a307f3d27ea427"
+    ami = "ami-023a307f3d27ea427"
     instance_type = "t2.micro"
     key_name = var.key_name
     vpc_security_group_ids = [aws_security_group.todo-app.id]
