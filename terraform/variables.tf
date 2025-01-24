@@ -1,12 +1,14 @@
 variable "region" {
     default = "ap-south-1"
 }
-variable "public_key"{
-        
-}
-variable "private_key"{
+
+variable "public_key" {
 
 }
-variable "key_name "{
+
+variable "private_key" {
+}
+
+variable "key_name" {  
     
 }
