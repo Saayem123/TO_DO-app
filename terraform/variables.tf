@@ -10,5 +10,5 @@ variable "private_key" {
 }
 
 variable "key_name" {  
-    
+    default = "todo-terraform"
 }
