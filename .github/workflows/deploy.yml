@@ -3,7 +3,7 @@ name: CI/CD with Terraform
 on:
   push:
     branches:
-      - main  
+      - main
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -17,7 +17,7 @@ jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
     outputs:
-      SERVER_PUBLIC_IP: ${{steps.set-ip.output.instance_public_ip}}
+      SERVER_PUBLIC_IP: ${{ steps.set-ip.outputs.instance_public_ip }}  # Comment: Set output to capture public IP of the instance
 
     steps:
       - name: Checkout
@@ -42,31 +42,31 @@ jobs:
           -var="key_name=todo-terraform" \
           -out=PLAN
         working-directory: ./terraform
-     
+
       - name: Terraform Apply
         id: Apply
         run: terraform apply PLAN
         working-directory: ./terraform
+
       - name: set output
-        id: set-ip 
-        run: |-
-          echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"
-  
+        id: set-ip
+        run: |
+          echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"  # Comment: Set output value for public IP
+
   deploy-app:
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: set IP env variable
-        run: echo SERVER_PUBLIC_IP=${{needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP}} >> $GITHUB_ENV
+        run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
+
       - name: login to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: login to AWS ECR
-        id: login_ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      
+
       - name: Create ECR Repository
         id: create-repo
         run: |
@@ -76,17 +76,16 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-south-1
-      
 
       - name: build and push docker image 
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
           IMAGE_TAG: ${{ github.sha }}
-        run:  |-
+        run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-        working-directory: ./TODO 
+        working-directory: ./TODO
 
       - name: deploy docker image EC2
         env:
@@ -96,21 +95,16 @@ jobs:
           AWS_DEFAULT_REGION: ap-south-1
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SERVER_PUBLIC_IP }}
+          host: ${{ env.SERVER_PUBLIC_IP }}  # Comment: Use the public IP of the EC2 instance
           username: ubuntu
-          key: ${{env.PRIVATE_SSH_KEY}} 
-          envs:   PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
+          key: ${{ env.PRIVATE_SSH_KEY }} 
+          envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
           script: |-
-            sudo apt update 
+            sudo apt update
             sudo apt install docker.io -y
             sudo apt install awscli -y
             sudo ${aws ecr get-login --no-include-email --region ap-south-1};
             sudo docker stop todoappcontainer || true
             sudo docker rm todoappcontainer || true
             sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            sudo docker run -d -name todoappcontainer -p 5000:5000 $REGISTRY/$REPOSITORY:$IMAGE_TAG
-
-
-
-
-
+            sudo docker run -d --name todoappcontainer -p 5000:5000 $REGISTRY/$REPOSITORY:$IMAGE_TAG
