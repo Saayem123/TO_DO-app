@@ -71,7 +71,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           working-directory: ./TODO
         run:  |-
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./TODO
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           working-directory: ./
       - name: deploy docker image EC2
