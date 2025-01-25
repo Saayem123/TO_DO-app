@@ -83,7 +83,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
           IMAGE_TAG: ${{ github.sha }}
-          working-directory: ./TODO
+        working-directory: ./TODO
         run:  |-
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./TODO
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
