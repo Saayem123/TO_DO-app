@@ -48,10 +48,6 @@ jobs:
         run: terraform apply PLAN
         working-directory: ./terraform
 
-      - name: Debug Public IP
-        run: |
-          echo "Instance Public IP: $(terraform output -raw instance_public_ip)"
-
       - name: set output
         id: set-ip
         run: |
@@ -66,9 +62,6 @@ jobs:
 
       - name: set IP env variable
         run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
-
-      - name: Debug SERVER_PUBLIC_IP
-        run: echo "SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }}"
 
       - name: login to AWS ECR
         id: login-ecr
