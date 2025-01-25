@@ -97,7 +97,7 @@ jobs:
         with:
           host: ${{ secrets.SERVER_PUBLIC_IP}}  # Comment: Use the public IP of the EC2 instance
           username: ubuntu
-          key: ${{ secrets.PRIVATE_SSH_KEY }} 
+          key: ${{ env.PRIVATE_SSH_KEY }} 
           envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
           script: |-
             sudo apt update
