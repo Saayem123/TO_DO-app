@@ -95,9 +95,9 @@ jobs:
           AWS_DEFAULT_REGION: ap-south-1
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SERVER_PUBLIC_IP }}  # Comment: Use the public IP of the EC2 instance
+          host: ${{ secrets.PUBLIC_SSH_KEY}}  # Comment: Use the public IP of the EC2 instance
           username: ubuntu
-          key: ${{ env.PRIVATE_SSH_KEY }} 
+          key: ${{ secrets.PRIVATE_SSH_KEY }} 
           envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
           script: |-
             sudo apt update
