@@ -63,6 +63,20 @@ jobs:
       - name: login to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      - name: login to AWS ECR
+        id: login_ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Create ECR Repository
+        id: create-repo
+        run: |
+          aws ecr describe-repositories --repository-names example-node-app --region $AWS_REGION || \
+          aws ecr create-repository --repository-name example-node-app --region $AWS_REGION
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
+      
 
       - name: build and push docker image 
         env:
