@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
 
@@ -45,13 +45,13 @@ jobs:
 
       - name: Terraform Apply
         id: Apply
-        run: terraform apply PLAN
+        run: terraform apply -auto-approve PLAN
         working-directory: ./terraform
 
-      - name: set output
+      - name: Set output
         id: set-ip
         run: |
-          echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"  
+          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV  # Use new method to set the environment variable
 
   deploy-app:
     runs-on: ubuntu-latest
@@ -60,10 +60,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: set IP env variable
-        run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
+      - name: Set IP env variable
+        run: echo "SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }}" >> $GITHUB_ENV  # Set SERVER_PUBLIC_IP as an environment variable
 
-      - name: login to AWS ECR
+      - name: Login to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
@@ -75,9 +75,9 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ap-south-1
+          AWS_REGION: ${{ env.AWS_REGION }}
 
-      - name: build and push docker image 
+      - name: Build and push Docker image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
@@ -87,19 +87,19 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
         working-directory: ./TODO
 
-      - name: deploy docker image EC2
+      - name: Deploy Docker image to EC2
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
           IMAGE_TAG: ${{ github.sha }}
-          AWS_DEFAULT_REGION: ap-south-1
+          AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SERVER_PUBLIC_IP }}  # Comment: Use the public IP of the EC2 instance
+          host: ${{ env.SERVER_PUBLIC_IP }}  # Use the public IP of the EC2 instance
           username: ubuntu
-          key: ${{ env.PRIVATE_SSH_KEY }} 
+          key: ${{ env.PRIVATE_SSH_KEY }}
           envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
-          script: |-
+          script: |
             sudo apt update
             sudo apt install docker.io -y
             sudo apt install awscli -y
