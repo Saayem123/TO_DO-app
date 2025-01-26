@@ -87,6 +87,6 @@ resource "aws_key_pair" "todo-terraform" {
 }
 
 output "instance_public_ip" {
-    value = aws_instance.todo-app.public_ip
+    value = aws_instance.todo-terraform.public_ip
     sensitive = true
 }
