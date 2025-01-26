@@ -39,8 +39,8 @@ To get started with the Task Manager application, follow these steps:
 1. Clone the repository to your local machine.
 
     ```bash
-    git clone https://github.com/your-username/task-manager.git
-    cd task-manager
+    git clone https://github.com/Saayem123/TO_DO-app.git
+    cd TO_DO
     ```
 
 2. Install the necessary dependencies:
