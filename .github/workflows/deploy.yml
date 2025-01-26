@@ -17,7 +17,7 @@ jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
     outputs:
-      SERVER_PUBLIC_IP: ${{ steps.set-ip.outputs.instance_public_ip }} 
+      SERVER_PUBLIC_IP: ${{ steps.set-ip.outputs.instance_public_ip }}  # Comment: Set output to capture public IP of the instance
 
     steps:
       - name: Checkout
@@ -51,7 +51,8 @@ jobs:
       - name: Set output
         id: set-ip
         run: |
-          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT 
+          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
+
 
   deploy-app:
     runs-on: ubuntu-latest
@@ -60,10 +61,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set IP env variable
-        run: echo "SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }}" >> $GITHUB_ENV # Comment: Updated to set SERVER_PUBLIC_IP in GITHUB_ENV
+      - name: set IP env variable
+        run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
 
-      - name: Login to AWS ECR
+      - name: login to AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
@@ -77,7 +78,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-south-1
 
-      - name: Build and push Docker image
+      - name: build and push docker image 
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
@@ -87,7 +88,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
         working-directory: ./TODO
 
-      - name: Deploy Docker image to EC2
+      - name: deploy docker image EC2
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: example-node-app
@@ -95,15 +96,15 @@ jobs:
           AWS_DEFAULT_REGION: ap-south-1
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SERVER_PUBLIC_IP }}
+          host: ${{ env.SERVER_PUBLIC_IP}}  # Comment: Use the public IP of the EC2 instance
           username: ubuntu
-          key: ${{ env.PRIVATE_SSH_KEY }}
+          key: ${{ env.PRIVATE_SSH_KEY }} 
           envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
           script: |-
             sudo apt update
             sudo apt install docker.io -y
             sudo apt install awscli -y
-            sudo $(aws ecr get-login-password --region ap-south-1) | docker login --username AWS --password-stdin $REGISTRY # Comment: Updated AWS ECR login command
+            sudo ${aws ecr get-login --no-include-email --region ap-south-1};
             sudo docker stop todoappcontainer || true
             sudo docker rm todoappcontainer || true
             sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
