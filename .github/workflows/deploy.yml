@@ -51,7 +51,7 @@ jobs:
       - name: set output
         id: set-ip
         run: |
-          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV  
+          echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"  
 
   deploy-app:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: set IP env variable
-        run: echo SERVER_PUBLIC_IP=${{ env.instance_public_ip }}" >> $GITHUB_ENV 
+        run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
 
       - name: login to AWS ECR
         id: login-ecr
@@ -95,7 +95,7 @@ jobs:
           AWS_DEFAULT_REGION: ap-south-1
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SERVER_PUBLIC_IP}}  # Comment: Use the public IP of the EC2 instance
+          host: ${{ env.SERVER_PUBLIC_IP }}  # Comment: Use the public IP of the EC2 instance
           username: ubuntu
           key: ${{ env.PRIVATE_SSH_KEY }} 
           envs: PRIVATE_SSH_KEY, REGISTRY, REPOSITORY, IMAGE_TAG, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, AWS_REGION
