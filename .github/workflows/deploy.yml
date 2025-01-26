@@ -51,7 +51,7 @@ jobs:
       - name: set output
         id: set-ip
         run: |
-          echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"  
+          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV  
 
   deploy-app:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: set IP env variable
-        run: echo SERVER_PUBLIC_IP=${{ needs.deploy-infrastructure.outputs.SERVER_PUBLIC_IP }} >> $GITHUB_ENV  # Comment: Set SERVER_PUBLIC_IP as an environment variable
+        run: echo SERVER_PUBLIC_IP=${{ env.instance_public_ip }}" >> $GITHUB_ENV 
 
       - name: login to AWS ECR
         id: login-ecr
